@@ -55,15 +55,29 @@ class _PantallaClimaState extends State<PantallaClima> {
     }
   }
 
+  // Devuelve los colores del fondo según el clima actual.
+  List<Color> _fondo() {
+    final c = _clima?.codigo;
+    if (c == null) return [const Color(0xFF2193b0), const Color(0xFF6dd5ed)];
+    if (c == 0) return [const Color(0xFF2980B9), const Color(0xFF6DD5FA)]; // despejado
+    if (c <= 3) return [const Color(0xFF5C6BC0), const Color(0xFF8E99F3)]; // nublado
+    if (c <= 48) return [const Color(0xFF757F9A), const Color(0xFFD7DDE8)]; // neblina
+    if (c <= 67) return [const Color(0xFF4B79A1), const Color(0xFF283E51)]; // lluvia
+    if (c <= 77) return [const Color(0xFF83A4D4), const Color(0xFFB6FBFF)]; // nieve
+    return [const Color(0xFF373B44), const Color(0xFF4286F4)]; // tormenta
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
+      // AnimatedContainer = el fondo cambia con una animación suave.
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 600),
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF2193b0), Color(0xFF6dd5ed)],
+            colors: _fondo(),
           ),
         ),
         child: SafeArea(
