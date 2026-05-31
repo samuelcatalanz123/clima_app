@@ -34,6 +34,7 @@ class _PantallaClimaState extends State<PantallaClima> {
   Clima? _clima;
   bool _cargando = false;
   String _error = '';
+  final List<String> _recientes = []; // ciudades buscadas hace poco
 
   Future<void> _buscar() async {
     final ciudad = _ciudad.text.trim();
@@ -47,7 +48,13 @@ class _PantallaClimaState extends State<PantallaClima> {
 
     try {
       final clima = await obtenerClima(ciudad); // ¡aquí hablamos con internet!
-      setState(() => _clima = clima);
+      setState(() {
+        _clima = clima;
+        // Guardamos la ciudad en "recientes" (sin repetir, máximo 5).
+        _recientes.remove(ciudad);
+        _recientes.insert(0, ciudad);
+        if (_recientes.length > 5) _recientes.removeLast();
+      });
     } catch (e) {
       setState(() => _error = 'No pude traer el clima. ¿Escribiste bien la ciudad?');
     } finally {
@@ -119,7 +126,24 @@ class _PantallaClimaState extends State<PantallaClima> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 40),
+                // Chips de búsquedas recientes (se pueden tocar).
+                if (_recientes.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: _recientes
+                        .map((ciudad) => ActionChip(
+                              label: Text(ciudad),
+                              onPressed: () {
+                                _ciudad.text = ciudad;
+                                _buscar();
+                              },
+                            ))
+                        .toList(),
+                  ),
+                ],
+                const SizedBox(height: 30),
                 // Resultado
                 Expanded(child: _contenido()),
               ],
