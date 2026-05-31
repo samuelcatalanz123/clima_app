@@ -1,18 +1,29 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// El clima de UN día (para el pronóstico).
+class Dia {
+  final String fecha;
+  final double max;
+  final double min;
+  final int codigo;
+  Dia({required this.fecha, required this.max, required this.min, required this.codigo});
+}
+
 // Clima guarda los datos que traemos de internet.
 class Clima {
   final String ciudad;
   final double temperatura;
   final double viento;
   final int codigo; // código del clima (estándar WMO)
+  final List<Dia> dias; // pronóstico de los próximos días
 
   Clima({
     required this.ciudad,
     required this.temperatura,
     required this.viento,
     required this.codigo,
+    required this.dias,
   });
 }
 
@@ -35,20 +46,39 @@ Future<Clima> obtenerClima(String ciudad) async {
   final nombre = lugar['name'];
   final pais = lugar['country'] ?? '';
 
-  // 2) Pronóstico: traer el clima actual de esas coordenadas.
+  // 2) Pronóstico: clima actual + los próximos días.
   final climaUrl = Uri.parse(
     'https://api.open-meteo.com/v1/forecast'
-    '?latitude=$lat&longitude=$lon&current_weather=true',
+    '?latitude=$lat&longitude=$lon&current_weather=true'
+    '&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto',
   );
   final climaResp = await http.get(climaUrl);
   final climaData = jsonDecode(climaResp.body);
   final actual = climaData['current_weather'];
+
+  // Leemos las LISTAS del pronóstico por día.
+  final daily = climaData['daily'];
+  final fechas = daily['time'] as List;
+  final maxs = daily['temperature_2m_max'] as List;
+  final mins = daily['temperature_2m_min'] as List;
+  final codigos = daily['weathercode'] as List;
+
+  final dias = <Dia>[];
+  for (int i = 0; i < fechas.length && i < 6; i++) {
+    dias.add(Dia(
+      fecha: fechas[i],
+      max: (maxs[i] as num).toDouble(),
+      min: (mins[i] as num).toDouble(),
+      codigo: codigos[i],
+    ));
+  }
 
   return Clima(
     ciudad: pais.isEmpty ? nombre : '$nombre, $pais',
     temperatura: (actual['temperature'] as num).toDouble(),
     viento: (actual['windspeed'] as num).toDouble(),
     codigo: actual['weathercode'],
+    dias: dias,
   );
 }
 
@@ -72,4 +102,11 @@ String descripcionClima(int c) {
   if (c <= 77) return 'Nieve';
   if (c <= 82) return 'Chubascos';
   return 'Tormenta';
+}
+
+// Devuelve el nombre corto del día (Lun, Mar...) a partir de una fecha "2026-05-31".
+String nombreDia(String fechaIso) {
+  final d = DateTime.parse(fechaIso);
+  const nombres = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  return nombres[d.weekday - 1];
 }

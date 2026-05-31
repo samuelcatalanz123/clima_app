@@ -134,22 +134,61 @@ class _PantallaClimaState extends State<PantallaClima> {
     }
     // Tarjeta con el clima
     final c = _clima!;
-    return Center(
+    return SingleChildScrollView(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(c.ciudad,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          Text(emojiClima(c.codigo), style: const TextStyle(fontSize: 90)),
+          const SizedBox(height: 12),
+          Text(emojiClima(c.codigo), style: const TextStyle(fontSize: 84)),
           Text('${c.temperatura.toStringAsFixed(1)}°C',
-              style: const TextStyle(color: Colors.white, fontSize: 56, fontWeight: FontWeight.bold)),
+              style: const TextStyle(color: Colors.white, fontSize: 52, fontWeight: FontWeight.bold)),
           Text(descripcionClima(c.codigo),
               style: const TextStyle(color: Colors.white, fontSize: 20)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           Text('💨 Viento: ${c.viento.toStringAsFixed(0)} km/h',
               style: const TextStyle(color: Colors.white70, fontSize: 16)),
+          const SizedBox(height: 24),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Próximos días',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 10),
+          // Lista HORIZONTAL con el pronóstico de varios días.
+          SizedBox(
+            height: 120,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: c.dias.map(_tarjetaDia).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Una tarjeta para un día del pronóstico.
+  Widget _tarjetaDia(Dia d) {
+    return Container(
+      width: 78,
+      margin: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(nombreDia(d.fecha),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(emojiClima(d.codigo), style: const TextStyle(fontSize: 28)),
+          Text('${d.max.toStringAsFixed(0)}°',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text('${d.min.toStringAsFixed(0)}°',
+              style: const TextStyle(color: Colors.white70, fontSize: 12)),
         ],
       ),
     );
